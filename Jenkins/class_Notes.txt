@@ -266,7 +266,7 @@ Day 7 - 19th Sep. 2023
 				
 				
 ***********************
-Day 7 - 19th Sep. 2023 
+Day 8 - 20th Sep. 2023 
 ***********************
 
 						
@@ -603,4 +603,189 @@ Next ::
 
 
 
+
+***********************
+Day 10 - 22nd Sep. 2023 
+***********************				
+
+		Build 
+		Deployment 
+		Build Triggers
+		
+		
+		Maven Build Stages :
+
+			pom.xml 
+			Goals 
+				clean
+				test
+				build 
+				package	=> unit test + build 
 				
+			Test Folder with the Test Scenarios
+			
+			Tools Configuration in Jenkins_Master :
+			
+			Tools & Plugins :::: 
+			
+pipeline {
+    agent { label 'slave1' }
+	
+	tools {
+        maven "maven-3.6.3"
+    }
+
+    stages {
+        stage('SCM Checkout') {
+            steps {
+                echo 'Perform SCM Checkout'
+				git 'https://github.com/LoksaiETA/Java-mvn-app2.git'
+				
+            }
+        }
+        stage('Build') {
+            steps {
+                echo 'Perform Application Build'
+				sh "mvn -Dmaven.test.failure.ignore=true clean package"
+            }
+        }
+        stage('Deploy to QA Server') {
+            steps {
+				script {
+					sshPublisher(publishers: [sshPublisherDesc(configName: 'Tomcat-Server', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '.', remoteDirectorySDF: false, removePrefix: 'target/', sourceFiles: 'target/mvn-hello-world.war')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+				}
+            }
+        }
+    }
+}
+
+
+
+
+
+Deploy to Target Servers ::::
+
+
+	Servers :::
+	
+		DEV 
+		
+		TEST 
+		
+		
+		Hosted Servers/Target Servers/Prod Server  (VM) - Hardware
+		
+			Application Server (Software) - Tomcat/Nginx
+			
+			Tomcat - Default runs in port 8080
+			
+			jdk, 
+			Tomcat 
+			Start Tomcat Server
+			
+			COnnect the Tomcat_Server to Jenkins Master 
+			
+			Create User 
+			Create Auth. - sshkey
+			
+			
+		Deployment ::: ????
+		
+		
+		Copying the artifacts from one server to another 
+		
+			Source_Server : Slave1 										Artifactory												Target_Server : Tomcat 
+			
+				target/mvn-hello-world.war						===> 	mvn-hello-world.war_SNAPSHOT_V1.0		===>					/opt/tomcat/webapps 
+
+			
+			
+			Server :::
+			
+				Project1_Artifacts
+					Release1_Artifacts
+						mvn-hello-world.war_SNAPSHOT_V1.0	
+						mvn-hello-world.war_SNAPSHOT_V1.1					PROD 
+			
+		Connect the Tomcat_Server to Jenkins :::
+		
+		In Jenkins_Master :: Install a plugin - Publish over ssh plugin.
+		
+				Archieve :::: Version Control the Artifacts :::
+				
+				Artifactory Repository - JFrog / Az Artifact
+				
+				mvn-hello-world.war_SNAPSHOT_V1.0
+				mvn-hello-world.war_SNAPSHOT_V1.1
+				
+				
+				
+		Environments ::
+		
+			DEV 
+			 Build & Create artifacts ==> Archieve it
+			 
+			QA 
+			UAT 
+			PROD 
+			 
+
+		Build Triggers :::
+		
+			- Build Periodic 		-- Crontab :
+			
+			Non-Prod Servers 												Prod Servers/Prod
+			
+			DEV 
+			QA 
+			UAT 
+			
+			8AM Start all the non-prod servers 
+			10PM stop all the non-prod servers 
+			
+			- Github Webhook
+			
+			- Poll SCM 
+			
+
+***********************
+Day 11 - 25th Sep. 2023 
+***********************			
+		
+		Build Triggers :::
+		
+			- Build Periodic 		-- Crontab :
+					==> Used to trigger the jenkins job based upon the schedule
+			
+			Non-Prod Servers 												Prod Servers/Prod
+			
+			DEV 
+			QA 
+			UAT 
+			
+			8AM Start all the non-prod servers 
+			10PM stop all the non-prod servers 
+			
+			- Github Webhook
+					==> Used to trigger the jenkins job as soon the src_code repo is pushed with any new changes.
+						Create a github Webhook configuration in src_code repository using jenkins payload url.
+						http://13.235.86.157:8080/github-webhook/
+						
+						
+			
+			- Poll SCM 
+					==> Used to trigger the jenkins job based upon the schedule if there is any changes happened in src_code repo.
+					
+				Test_Cycles :::
+				
+					Test_Jobs 
+						8AM -- Test job
+						12noon --> test job1
+						4 pm
+			
+Summary :::
+		Jenkins_Architecture 
+		Node config. 
+		Jenkins Administration 
+		CICD
+		Automated triggers				
